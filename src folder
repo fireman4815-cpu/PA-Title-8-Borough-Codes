@@ -1,0 +1,126 @@
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import App from './App.jsx';
+import './index.css';
+
+createRoot(document.getElementById('root')).render(<App />);
+import React, { useEffect, useState } from 'react';
+import Fuse from 'fuse.js';
+
+export default function App() {
+  const [query, setQuery] = useState('');
+  const [htmlData, setHtmlData] = useState(null);
+  const [sections, setSections] = useState([]);
+  const [fuse, setFuse] = useState(null);
+  const [results, setResults] = useState([]);
+  const [selected, setSelected] = useState(null);
+  const [bookmarks, setBookmarks] = useState(() => JSON.parse(localStorage.getItem('title8_bookmarks') || '[]'));
+
+  useEffect(() => {
+    async function fetchData() {
+      const res = await fetch('/api/fetchTitle8');
+      const j = await res.json();
+      setHtmlData(j.html);
+
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(j.html, 'text/html');
+
+      const headings = Array.from(doc.querySelectorAll('h2, h3'));
+      const parsed = [];
+
+      let currentChapter = { title: 'Title 8', sections: [] };
+      headings.forEach((h, idx) => {
+        const text = h.textContent.trim();
+        let el = h.nextElementSibling;
+        let htmlChunk = '';
+        while (el && !['H2','H3'].includes(el.tagName)) {
+          htmlChunk += el.outerHTML || el.textContent;
+          el = el.nextElementSibling;
+        }
+        if (/chapter/i.test(text) || /part/i.test(text)) {
+          currentChapter = { title: text, sections: [] };
+          parsed.push(currentChapter);
+        } else {
+          currentChapter.sections.push({ id: idx + '-' + text.slice(0,20), title: text, html: htmlChunk });
+        }
+      });
+
+      setSections(parsed.flatMap(ch => ch.sections || []));
+      const f = new Fuse(parsed.flatMap(ch => ch.sections || []).map(s => ({...s, chapter: currentChapter.title})), { keys: ['title','html','chapter'], threshold: 0.4 });
+      setFuse(f);
+    }
+    fetchData().catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    if (!fuse || !query) { setResults([]); return; }
+    const r = fuse.search(query).map(x => x.item);
+    setResults(r);
+  }, [query,fuse]);
+
+  function toggleBookmark(section) {
+    setBookmarks(prev => {
+      const exists = prev.find(b => b.id === section.id);
+      const next = exists ? prev.filter(b => b.id !== section.id) : [...prev, section];
+      localStorage.setItem('title8_bookmarks', JSON.stringify(next));
+      return next;
+    });
+  }
+
+  return (
+    <div style={{ maxWidth: 900, margin: '0 auto', padding: 12 }}>
+      <h1>Title 8 — PA Boroughs & Towns</h1>
+      <input
+        placeholder="Search Title 8..."
+        value={query}
+        onChange={e => setQuery(e.target.value)}
+        style={{ width: '100%', padding: 10, margin: '12px 0', fontSize: 16, borderRadius: 8, border: '1px solid #ddd' }}
+      />
+
+      {query ? (
+        <div>
+          <h3>Search Results</h3>
+          {results.length===0 && <div>No matches found.</div>}
+          {results.map(r => (
+            <div key={r.id} style={{ padding: 8, border:'1px solid #eee', marginTop:8 }} onClick={()=>setSelected(r)}>
+              <b>{r.title}</b><br/><small>{r.chapter}</small>
+            </div>
+          ))}
+        </div>
+      ) : selected ? (
+        <div>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+            <h2>{selected.title}</h2>
+            <button onClick={()=>toggleBookmark(selected)}>{bookmarks.find(b=>b.id===selected.id)?'★':'☆'}</button>
+          </div>
+          <div dangerouslySetInnerHTML={{__html:selected.html}} style={{ marginTop:12 }}/>
+          <button onClick={()=>setSelected(null)} style={{ marginTop:12 }}>Back</button>
+        </div>
+      ) : (
+        <div>
+          <h3>Bookmarks</h3>
+          {bookmarks.length===0 && <div>No bookmarks yet</div>}
+          {bookmarks.map(b => (
+            <div key={b.id} style={{ padding:8, border:'1px solid #eee', marginTop:8 }} onClick={()=>setSelected(b)}>
+              {b.title}
+            </div>
+          ))}
+        </div>
+      )}
+      <footer style={{ marginTop:24, fontSize:12, color:'#666' }}>
+        Source: Pennsylvania General Assembly — Title 8 consolidated statutes
+      </footer>
+    </div>
+  );
+}
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f7f7f7;
+  margin: 0;
+  padding: 0;
+}
+
+input:focus {
+  outline: none;
+  border-color: #0b5cff;
+}
