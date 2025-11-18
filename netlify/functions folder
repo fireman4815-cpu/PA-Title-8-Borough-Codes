@@ -1,0 +1,17 @@
+const fetch = require('node-fetch');
+
+const SOURCE_URL = 'https://www.palegis.us/statutes/consolidated/view-statute?ttl=08&txtType=HTM';
+
+exports.handler = async function(event, context) {
+  try {
+    const res = await fetch(SOURCE_URL);
+    const html = await res.text();
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      body: JSON.stringify({ title: "Title 8 — Boroughs & Towns", html, source: SOURCE_URL, fetchedAt: new Date().toISOString() })
+    };
+  } catch (err) {
+    return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
+  }
+};
