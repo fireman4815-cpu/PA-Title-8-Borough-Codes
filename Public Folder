@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PA Title 8 — Borough Codes</title>
+    <link rel="manifest" href="/manifest.json" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script src="/service-worker.js"></script>
+  </body>
+</html>
+{
+  "short_name": "Title8",
+  "name": "PA Title 8 Borough Codes",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0b5cff",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
+// Basic service worker to enable PWA installability
+self.addEventListener('install', (event) => {
+  self.skipWaiting();
+});
+
+self.addEventListener('fetch', (event) => {
+  // Network-first strategy
+  event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
+});
