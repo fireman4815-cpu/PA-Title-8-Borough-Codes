@@ -1,1 +1,0 @@
-exports.handler=async()=>({statusCode:200,body:JSON.stringify({title:'Title 8 data placeholder'})});
