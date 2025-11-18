@@ -1,0 +1,1 @@
+export default function App(){return <div>PA Title 8 PWA Placeholder</div>;}
