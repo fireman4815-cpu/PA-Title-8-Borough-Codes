@@ -1,0 +1,43 @@
+{
+  "name": "pa-title8-pwa",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Progressive Web App for Pennsylvania Title 8 Borough Codes",
+  "dependencies": {
+    "react": "latest",
+    "react-dom": "latest",
+    "react-router-dom": "latest",
+    "zustand": "latest",
+    "lucide-react": "latest",
+    "fuse.js": "latest",
+    "cheerio": "latest",
+    "node-fetch": "latest"
+  },
+  "devDependencies": {
+    "autoprefixer": "latest",
+    "postcss": "latest",
+    "tailwindcss": "latest",
+    "@vitejs/plugin-react": "latest",
+    "vite": "latest"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  }
+}
+# PA Title 8 Borough Codes PWA
+
+This is a Progressive Web App (PWA) to view, search, and bookmark Pennsylvania Title 8 Borough and Incorporated Town statutes.
+
+## Features
+- Full-text search using Fuse.js
+- Mobile-app-style interface
+- Bookmarks stored in localStorage
+- PWA installable
+- Live data fetched from PA General Assembly
+
+## Deployment
+- Recommended: [Netlify](https://www.netlify.com)
+- Build: `npm run build`
+- Publish directory: `dist` (or `build` if CRA)
